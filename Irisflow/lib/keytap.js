@@ -39,9 +39,9 @@ function load() {
 function start(onEvent) {
   const keys = load();
   keys.start();
-  logger.info("Key tap thread started");
+  logger.info("Key tap start requested", snapshot());
   const buf = Buffer.alloc(128);
-  return setInterval(() => {
+  const pollTimer = setInterval(() => {
     if (keys.poll(buf, buf.length) !== 1) return;
     const text = buf.toString("utf8").replace(/\0.*$/, "").trim();
     if (!text) return;
@@ -51,6 +51,14 @@ function start(onEvent) {
       logger.warn("Key tap poll parse failed", { text, error: error.message });
     }
   }, 20);
+  const retryTimer = setInterval(() => {
+    if (keys.ready() === 1) {
+      clearInterval(retryTimer);
+      return;
+    }
+    keys.start();
+  }, 2000);
+  return { pollTimer, retryTimer };
 }
 
 function ready() {

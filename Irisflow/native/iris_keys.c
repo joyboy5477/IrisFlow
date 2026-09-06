@@ -2,17 +2,19 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
-static pthread_t worker;
-static int workerStarted;
 static int tapReady;
 static int leftDown;
 static char pendingName[32];
 static char pendingState[8];
 static int pending;
 static CFMachPortRef tap;
+static char tapStatus[64] = "idle";
+
+static void setStatus(const char *value) {
+  snprintf(tapStatus, sizeof(tapStatus), "%s", value);
+}
 
 static CGEventRef tapCallback(
     CGEventTapProxy proxy,
@@ -52,59 +54,28 @@ static CGEventRef tapCallback(
   return event;
 }
 
-static char tapStatus[64] = "idle";
-
-static void setStatus(const char *value) {
-  snprintf(tapStatus, sizeof(tapStatus), "%s", value);
-}
-
-static void *runTap(void *arg) {
-  (void)arg;
-  CGEventMask mask = ((CGEventMask)1 << kCGEventFlagsChanged) | ((CGEventMask)1 << kCGEventKeyDown);
-
-  while (1) {
-    setStatus(AXIsProcessTrusted() ? "creating" : "waiting-ax");
-    tap = CGEventTapCreate(
-        kCGSessionEventTap,
-        kCGHeadInsertEventTap,
-        kCGEventTapOptionListenOnly,
-        mask,
-        tapCallback,
-        NULL
-    );
-    if (!tap) {
-      tap = CGEventTapCreate(
-          kCGHIDEventTap,
-          kCGHeadInsertEventTap,
-          kCGEventTapOptionListenOnly,
-          mask,
-          tapCallback,
-          NULL
-      );
-    }
-    if (tap) {
-      CFRunLoopSourceRef source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
-      CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
-      CGEventTapEnable(tap, true);
-      tapReady = 1;
-      setStatus("ready");
-      CFRunLoopRun();
-      tapReady = 0;
-      tap = NULL;
-      setStatus("stopped");
-    } else {
-      setStatus("create-failed");
-    }
-    sleep(2);
-  }
-  return NULL;
-}
-
 void iris_keys_start(void) {
-  if (workerStarted) return;
-  workerStarted = 1;
-  pthread_create(&worker, NULL, runTap, NULL);
-  pthread_detach(worker);
+  if (tapReady) return;
+
+  CGEventMask mask = ((CGEventMask)1 << kCGEventFlagsChanged) | ((CGEventMask)1 << kCGEventKeyDown);
+  tap = CGEventTapCreate(
+      kCGSessionEventTap,
+      kCGHeadInsertEventTap,
+      kCGEventTapOptionDefault,
+      mask,
+      tapCallback,
+      NULL
+  );
+  if (!tap) {
+    setStatus(AXIsProcessTrusted() ? "create-failed" : "waiting-ax");
+    return;
+  }
+
+  CFRunLoopSourceRef source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
+  CFRunLoopAddSource(CFRunLoopGetMain(), source, kCFRunLoopCommonModes);
+  CGEventTapEnable(tap, true);
+  tapReady = 1;
+  setStatus("ready");
 }
 
 int iris_keys_ready(void) {
