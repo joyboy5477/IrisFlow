@@ -101,7 +101,7 @@ If you can type in it, you can dictate into it.
 | [Cerebras](https://cloud.cerebras.ai/), [OpenAI](https://platform.openai.com/api-keys), or [Anthropic](https://console.anthropic.com/settings/keys) | AI mode |
 | [Google AI](https://aistudio.google.com/apikey) | Searching uploaded documents |
 
-There is no separate backend. `Irisflow` is the whole app.
+Iris Flow runs entirely on your Mac. You only paste API keys for speech and AI.
 
 ## License
 
