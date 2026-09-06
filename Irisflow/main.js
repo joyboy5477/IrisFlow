@@ -279,25 +279,20 @@ function getKeyServerPath() {
 }
 
 function showAccessibilityHelp() {
+  if (accessibilitySettingsOpened) return;
+  accessibilitySettingsOpened = true;
   sendToIrisBar("status", {
     state: "error",
-    text: "Enable Irisflow in Accessibility, then relaunch.",
+    text: "Enable Irisflow in Accessibility, then quit and reopen.",
   });
-  const now = Date.now();
-  if (now - (showAccessibilityHelp.lastLogAt || 0) > 15000) {
-    showAccessibilityHelp.lastLogAt = now;
-    logger.warn("Accessibility permission missing", {
-      packaged: app.isPackaged,
-      tapReady: keytap.ready(),
-    });
-  }
-  if (!accessibilitySettingsOpened) {
-    accessibilitySettingsOpened = true;
-    logger.info("Opening Accessibility settings");
-    shell.openExternal(
-      "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-    );
-  }
+  logger.warn("Accessibility permission missing", {
+    packaged: app.isPackaged,
+    ...keytap.snapshot(),
+  });
+  logger.info("Opening Accessibility settings once");
+  shell.openExternal(
+    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+  );
 }
 
 function startVoiceCapture() {
@@ -380,29 +375,18 @@ function startKeyListener() {
 
   try {
     keytap.start((event) => handleKeyEvent(event));
-    logger.info("In-process key tap started");
+    logger.info("In-process key tap started", keytap.snapshot());
     let announcedReady = false;
-    let lastWaitLog = 0;
+    setTimeout(() => {
+      const snap = keytap.snapshot();
+      logger.info("Key tap check", snap);
+      if (!snap.ready) showAccessibilityHelp();
+    }, 2500);
     const waitForTap = setInterval(() => {
-      const trusted = systemPreferences.isTrustedAccessibilityClient(false);
-      const tapReady = keytap.ready();
-      if (tapReady && !announcedReady) {
-        announcedReady = true;
-        clearInterval(waitForTap);
-        logger.info("Left-Ctrl listener is ready", { trusted, tapReady });
-        return;
-      }
-      const now = Date.now();
-      if (now - lastWaitLog < 15000) return;
-      lastWaitLog = now;
-      if (!trusted) {
-        showAccessibilityHelp();
-      } else if (!tapReady) {
-        logger.warn("Accessibility is on, but key tap is not ready yet", {
-          trusted,
-          tapReady,
-        });
-      }
+      if (!keytap.ready() || announcedReady) return;
+      announcedReady = true;
+      clearInterval(waitForTap);
+      logger.info("Left-Ctrl listener is ready", keytap.snapshot());
     }, 1500);
     return;
   } catch (error) {

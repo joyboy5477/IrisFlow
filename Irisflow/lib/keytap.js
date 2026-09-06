@@ -28,6 +28,8 @@ function load() {
   lib = {
     start: dylib.func("void iris_keys_start()"),
     ready: dylib.func("int iris_keys_ready()"),
+    ax: dylib.func("int iris_keys_ax()"),
+    status: dylib.func("void iris_keys_status(char *buf, int n)"),
     poll: dylib.func("int iris_keys_poll(char *buf, int n)"),
   };
   logger.info("Key tap library loaded");
@@ -60,4 +62,19 @@ function ready() {
   }
 }
 
-module.exports = { start, ready, dylibPath };
+function snapshot() {
+  try {
+    const keys = load();
+    const buf = Buffer.alloc(64);
+    keys.status(buf, buf.length);
+    return {
+      ready: keys.ready() === 1,
+      ax: keys.ax() === 1,
+      nativeStatus: buf.toString("utf8").replace(/\0.*$/, "").trim(),
+    };
+  } catch (error) {
+    return { ready: false, ax: false, nativeStatus: error.message };
+  }
+}
+
+module.exports = { start, ready, snapshot, dylibPath };

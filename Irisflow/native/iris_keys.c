@@ -52,28 +52,48 @@ static CGEventRef tapCallback(
   return event;
 }
 
+static char tapStatus[64] = "idle";
+
+static void setStatus(const char *value) {
+  snprintf(tapStatus, sizeof(tapStatus), "%s", value);
+}
+
 static void *runTap(void *arg) {
   (void)arg;
   CGEventMask mask = ((CGEventMask)1 << kCGEventFlagsChanged) | ((CGEventMask)1 << kCGEventKeyDown);
 
   while (1) {
-    if (AXIsProcessTrusted()) {
+    setStatus(AXIsProcessTrusted() ? "creating" : "waiting-ax");
+    tap = CGEventTapCreate(
+        kCGSessionEventTap,
+        kCGHeadInsertEventTap,
+        kCGEventTapOptionListenOnly,
+        mask,
+        tapCallback,
+        NULL
+    );
+    if (!tap) {
       tap = CGEventTapCreate(
-          kCGSessionEventTap,
+          kCGHIDEventTap,
           kCGHeadInsertEventTap,
-          kCGEventTapOptionDefault,
+          kCGEventTapOptionListenOnly,
           mask,
           tapCallback,
           NULL
       );
-      if (tap) {
-        CFRunLoopSourceRef source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
-        CGEventTapEnable(tap, true);
-        tapReady = 1;
-        CFRunLoopRun();
-        tapReady = 0;
-      }
+    }
+    if (tap) {
+      CFRunLoopSourceRef source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0);
+      CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
+      CGEventTapEnable(tap, true);
+      tapReady = 1;
+      setStatus("ready");
+      CFRunLoopRun();
+      tapReady = 0;
+      tap = NULL;
+      setStatus("stopped");
+    } else {
+      setStatus("create-failed");
     }
     sleep(2);
   }
@@ -89,6 +109,15 @@ void iris_keys_start(void) {
 
 int iris_keys_ready(void) {
   return tapReady;
+}
+
+int iris_keys_ax(void) {
+  return AXIsProcessTrusted() ? 1 : 0;
+}
+
+void iris_keys_status(char *buf, int n) {
+  if (!buf || n < 8) return;
+  snprintf(buf, (size_t)n, "%s", tapStatus);
 }
 
 int iris_keys_poll(char *buf, int n) {
