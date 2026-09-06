@@ -14,15 +14,11 @@ private func writeEvent(name: String, state: String) {
 }
 
 private func waitForAccessibilityPermission() {
-    let options = [
-        kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
-    ] as CFDictionary
-
-    if AXIsProcessTrustedWithOptions(options) {
+    if AXIsProcessTrusted() {
         return
     }
 
-    fputs("Waiting for Accessibility permission. Enable Irisflow or MacKeyServer, then this helper will continue.\n", stderr)
+    fputs("Waiting for Accessibility permission. Enable Irisflow, then this helper will continue.\n", stderr)
     while !AXIsProcessTrusted() {
         Thread.sleep(forTimeInterval: 2.0)
     }

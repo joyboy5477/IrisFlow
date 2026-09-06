@@ -25,9 +25,17 @@ if [[ -z "$APP" ]]; then
 fi
 
 echo "Installing Irisflow → $DEST"
+osascript -e 'tell application "Irisflow" to quit' >/dev/null 2>&1 || true
+sleep 1
 rm -rf "/Applications/Iris Flow.app" "$DEST"
 cp -R "$APP" "$DEST"
+xattr -cr "$DEST" 2>/dev/null || true
 rm -rf "$ROOT/release"
+
+echo "Signed as:"
+codesign -d -v "$DEST" 2>&1 | egrep 'Identifier|Authority|Signature' || true
+echo "Requirement:"
+codesign -d -r- "$DEST" 2>&1 | sed 's/^/# /'
 
 echo
 echo "Irisflow is in Applications. You can open it from Spotlight or the Dock anytime."

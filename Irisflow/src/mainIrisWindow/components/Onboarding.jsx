@@ -18,9 +18,11 @@ export default function Onboarding({ onFinish }) {
         </p>
         <ol>
           <li>
-            Grant <strong>Accessibility</strong> and <strong>Microphone</strong> when macOS asks.
-            Then quit Irisflow and open it again from Applications. Accessibility lets it listen
-            for Left-Ctrl and paste dictation.
+            Grant <strong>Accessibility</strong> and <strong>Microphone</strong> to{" "}
+            <strong>Irisflow</strong> in System Settings. If the toggle is already on but Control
+            still does nothing, remove Irisflow from the list, add{" "}
+            <code>/Applications/Irisflow.app</code> again, then quit and reopen. That grant
+            should stick across rebuilds once the app is signed.
           </li>
           <li>
             Open <strong>Keys</strong> and paste a <strong>Deepgram</strong> key. That is enough for

@@ -10,7 +10,7 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const { exec, spawn } = require("child_process");
+const { exec, spawn, spawnSync } = require("child_process");
 
 const logger = require("./lib/logger");
 const store = require("./lib/store");
@@ -554,12 +554,22 @@ app.whenReady().then(async () => {
   registerIpc();
 
   if (process.platform === "darwin") {
-    const trusted = systemPreferences.isTrustedAccessibilityClient(true);
+    const trusted = systemPreferences.isTrustedAccessibilityClient(false);
+    let requirement = "";
+    try {
+      const result = spawnSync("codesign", ["-d", "-r-", process.execPath], {
+        encoding: "utf8",
+      });
+      requirement = `${result.stdout || ""}${result.stderr || ""}`.trim();
+    } catch (error) {
+      requirement = error.message;
+    }
     logger.info("Accessibility trusted", {
       trusted,
       packaged: app.isPackaged,
       name: app.getName(),
       execPath: process.execPath,
+      requirement,
     });
   }
 

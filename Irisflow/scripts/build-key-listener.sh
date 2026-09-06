@@ -19,7 +19,16 @@ swiftc \
   "$SRC" \
   -o "$OUT"
 chmod +x "$OUT"
-codesign --sign - --force --identifier com.irisflow.app "$OUT" >/dev/null 2>&1 || true
+
+IDENTITY="${IRISFLOW_CODESIGN_IDENTITY:-}"
+if [[ -z "$IDENTITY" ]]; then
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F '"' '/Developer ID Application:|Apple Development:|Irisflow/{print $2; exit}')"
+fi
+if [[ -n "$IDENTITY" ]]; then
+  codesign --sign "$IDENTITY" --force --identifier com.irisflow.keys --timestamp=none "$OUT" >/dev/null 2>&1 || true
+else
+  codesign --sign - --force --identifier com.irisflow.keys "$OUT" >/dev/null 2>&1 || true
+fi
 file "$OUT"
 
 clang \
@@ -29,5 +38,9 @@ clang \
   -framework ApplicationServices \
   -o "$OUT_DIR/libiriskeys.dylib" \
   "$ROOT/native/iris_keys.c"
-codesign --sign - --force --identifier com.irisflow.app "$OUT_DIR/libiriskeys.dylib" >/dev/null 2>&1 || true
+if [[ -n "$IDENTITY" ]]; then
+  codesign --sign "$IDENTITY" --force --identifier com.irisflow.keys --timestamp=none "$OUT_DIR/libiriskeys.dylib" >/dev/null 2>&1 || true
+else
+  codesign --sign - --force --identifier com.irisflow.keys "$OUT_DIR/libiriskeys.dylib" >/dev/null 2>&1 || true
+fi
 file "$OUT_DIR/libiriskeys.dylib"
