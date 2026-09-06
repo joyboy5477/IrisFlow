@@ -18,6 +18,7 @@ const settings = require("./lib/settings");
 const rag = require("./lib/rag");
 const voice = require("./lib/voice");
 const cues = require("./lib/cues");
+const keytap = require("./lib/keytap");
 
 let irisBarWindow = null;
 let mainWindow = null;
@@ -267,29 +268,12 @@ async function copyToClipboard(text) {
 
 function getKeyServerPath() {
   if (app.isPackaged) {
-    const bundledPath = path.join(
+    return path.join(
       process.resourcesPath,
       "app.asar.unpacked",
       "bin",
       "MacKeyServer"
     );
-    const stablePath = path.join(app.getPath("userData"), "MacKeyServer");
-    try {
-      const bundledStat = fs.statSync(bundledPath);
-      const stableStat = fs.existsSync(stablePath) ? fs.statSync(stablePath) : null;
-      const shouldCopy =
-        !stableStat ||
-        stableStat.size !== bundledStat.size ||
-        stableStat.mtimeMs < bundledStat.mtimeMs;
-      if (shouldCopy) {
-        fs.copyFileSync(bundledPath, stablePath);
-        fs.chmodSync(stablePath, 0o755);
-      }
-      return stablePath;
-    } catch (error) {
-      logger.error("Failed to install key helper", error.message);
-      return bundledPath;
-    }
   }
   return path.join(__dirname, "bin", "MacKeyServer");
 }
@@ -299,9 +283,17 @@ function showAccessibilityHelp() {
     state: "error",
     text: "Enable Irisflow in Accessibility, then relaunch.",
   });
-  logger.warn("Accessibility permission missing");
+  const now = Date.now();
+  if (now - (showAccessibilityHelp.lastLogAt || 0) > 15000) {
+    showAccessibilityHelp.lastLogAt = now;
+    logger.warn("Accessibility permission missing", {
+      packaged: app.isPackaged,
+      tapReady: keytap.ready(),
+    });
+  }
   if (!accessibilitySettingsOpened) {
     accessibilitySettingsOpened = true;
+    logger.info("Opening Accessibility settings");
     shell.openExternal(
       "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
     );
@@ -350,6 +342,7 @@ async function stopVoiceCapture() {
 }
 
 function handleKeyEvent(event) {
+  logger.info("Key event", { name: event.name, state: event.state });
   if (event.name === TRIGGER_KEY) {
     if (event.state === "DOWN") {
       if (holdTimer || isVoiceRecording) return;
@@ -376,6 +369,44 @@ function handleKeyEvent(event) {
 function startKeyListener() {
   if (process.platform !== "darwin") {
     throw new Error("Iris Flow is currently macOS-only.");
+  }
+
+  logger.info("Starting key listener", {
+    packaged: app.isPackaged,
+    execPath: process.execPath,
+    dylib: keytap.dylibPath(),
+    helper: getKeyServerPath(),
+  });
+
+  try {
+    keytap.start((event) => handleKeyEvent(event));
+    logger.info("In-process key tap started");
+    let announcedReady = false;
+    let lastWaitLog = 0;
+    const waitForTap = setInterval(() => {
+      const trusted = systemPreferences.isTrustedAccessibilityClient(false);
+      const tapReady = keytap.ready();
+      if (tapReady && !announcedReady) {
+        announcedReady = true;
+        clearInterval(waitForTap);
+        logger.info("Left-Ctrl listener is ready", { trusted, tapReady });
+        return;
+      }
+      const now = Date.now();
+      if (now - lastWaitLog < 15000) return;
+      lastWaitLog = now;
+      if (!trusted) {
+        showAccessibilityHelp();
+      } else if (!tapReady) {
+        logger.warn("Accessibility is on, but key tap is not ready yet", {
+          trusted,
+          tapReady,
+        });
+      }
+    }, 1500);
+    return;
+  } catch (error) {
+    logger.warn("In-process key tap unavailable, using helper", error.message);
   }
 
   const keyServerPath = getKeyServerPath();
@@ -428,6 +459,15 @@ function registerIpc() {
   ipcMain.handle("get-settings", () => settings.getSettings());
   ipcMain.handle("get-model-options", () => settings.MODEL_OPTIONS);
   ipcMain.handle("get-activity-log", () => logger.getEntries());
+  ipcMain.handle("get-log-path", () => logger.getPath());
+  ipcMain.handle("reveal-log-file", () => {
+    const file = logger.getPath();
+    if (file && fs.existsSync(file)) {
+      shell.showItemInFolder(file);
+      return { opened: true, file };
+    }
+    return { opened: false, file: file || "" };
+  });
   ipcMain.handle("get-chats", () => voice.listChats());
   ipcMain.handle("get-resources", () => rag.listResources());
   ipcMain.handle("get-clipboard", () => clipboard.readText());
@@ -531,7 +571,12 @@ app.whenReady().then(async () => {
 
   if (process.platform === "darwin") {
     const trusted = systemPreferences.isTrustedAccessibilityClient(true);
-    logger.info("Accessibility trusted", { trusted });
+    logger.info("Accessibility trusted", {
+      trusted,
+      packaged: app.isPackaged,
+      name: app.getName(),
+      execPath: process.execPath,
+    });
   }
 
   createIrisBarWindow();

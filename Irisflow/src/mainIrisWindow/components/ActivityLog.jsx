@@ -3,11 +3,15 @@ import React, { useEffect, useState } from "react";
 export default function ActivityLog() {
   const [entries, setEntries] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [logPath, setLogPath] = useState("");
 
   useEffect(() => {
     let active = true;
     window.iris.getActivityLog().then((list) => {
       if (active) setEntries(list || []);
+    });
+    window.iris.getLogPath?.().then((file) => {
+      if (active && file) setLogPath(file);
     });
     const off = window.iris.onActivityLog((entry) => {
       setEntries((current) => [...current, entry].slice(-400));
@@ -31,14 +35,26 @@ export default function ActivityLog() {
           <p className="eyebrow">Debug</p>
           <h2>Activity</h2>
         </div>
-        <button className="secondary-action" type="button" onClick={copyAll}>
-          {copied ? "Copied" : "Copy log"}
-        </button>
+        <div className="activity-actions">
+          <button className="secondary-action" type="button" onClick={() => window.iris.revealLogFile?.()}>
+            Open log file
+          </button>
+          <button className="secondary-action" type="button" onClick={copyAll}>
+            {copied ? "Copied" : "Copy log"}
+          </button>
+        </div>
       </header>
 
       <p className="muted">
-        Mic, Deepgram, models, and paste timing land here. Look for <strong>Voice latency</strong> after
-        each hold — that is the real wait after you release Control. API keys are redacted.
+        Mic, Deepgram, models, Left-Ctrl, Accessibility, and paste timing land here. If the bar
+        does not react to Control, look for <strong>Key event</strong> and{" "}
+        <strong>Left-Ctrl listener is ready</strong>. API keys are redacted.
+        {logPath ? (
+          <>
+            {" "}
+            File: <code>{logPath}</code>
+          </>
+        ) : null}
       </p>
 
       <div className="activity-list">

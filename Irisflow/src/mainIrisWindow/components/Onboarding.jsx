@@ -19,7 +19,8 @@ export default function Onboarding({ onFinish }) {
         <ol>
           <li>
             Grant <strong>Accessibility</strong> and <strong>Microphone</strong> when macOS asks.
-            Accessibility lets Iris Flow listen for Left-Ctrl and paste dictation.
+            Then quit Irisflow and open it again from Applications. Accessibility lets it listen
+            for Left-Ctrl and paste dictation.
           </li>
           <li>
             Open <strong>Keys</strong> and paste a <strong>Deepgram</strong> key. That is enough for

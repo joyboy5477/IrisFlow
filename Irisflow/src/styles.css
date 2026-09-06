@@ -368,6 +368,12 @@ select,
   margin-bottom: 14px;
 }
 
+.activity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .history-section-head {
   position: sticky;
   top: -34px;

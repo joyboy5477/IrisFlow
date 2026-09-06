@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld("iris", {
   saveSettings: (patch) => ipcRenderer.invoke("save-settings", patch),
   getActivityLog: () => ipcRenderer.invoke("get-activity-log"),
   copyActivityLog: () => ipcRenderer.invoke("copy-activity-log"),
+  getLogPath: () => ipcRenderer.invoke("get-log-path"),
+  revealLogFile: () => ipcRenderer.invoke("reveal-log-file"),
   getChats: () => ipcRenderer.invoke("get-chats"),
   getResources: () => ipcRenderer.invoke("get-resources"),
   uploadResources: (files) => ipcRenderer.invoke("upload-resources", files),

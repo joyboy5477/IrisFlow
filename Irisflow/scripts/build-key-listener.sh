@@ -19,4 +19,15 @@ swiftc \
   "$SRC" \
   -o "$OUT"
 chmod +x "$OUT"
+codesign --sign - --force --identifier com.irisflow.app "$OUT" >/dev/null 2>&1 || true
 file "$OUT"
+
+clang \
+  -dynamiclib \
+  -O2 \
+  -target arm64-apple-macos11.0 \
+  -framework ApplicationServices \
+  -o "$OUT_DIR/libiriskeys.dylib" \
+  "$ROOT/native/iris_keys.c"
+codesign --sign - --force --identifier com.irisflow.app "$OUT_DIR/libiriskeys.dylib" >/dev/null 2>&1 || true
+file "$OUT_DIR/libiriskeys.dylib"

@@ -19,6 +19,7 @@
     "install:mac": "npm run build:prod && electron-builder --mac --arm64 --dir && bash scripts/install-mac.sh"
   },
   "dependencies": {
+    "koffi": "^2.16.3",
     "mammoth": "^1.9.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
@@ -50,19 +51,24 @@
     ],
     "asarUnpack": [
       "bin/MacKeyServer",
-      "node_modules/sql.js/dist/*.wasm"
+      "bin/libiriskeys.dylib",
+      "node_modules/sql.js/dist/*.wasm",
+      "node_modules/koffi/**"
     ],
     "directories": {
       "output": "release",
       "buildResources": "build"
     },
+    "afterPack": "./scripts/after-pack.js",
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.productivity",
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "hardenedRuntime": false,

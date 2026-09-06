@@ -80,10 +80,15 @@ function getEntries() {
   return entries.slice();
 }
 
+function getPath() {
+  return logPath;
+}
+
 module.exports = {
   init,
   setEmitter,
   getEntries,
+  getPath,
   info: (message, extra) => push("info", message, extra),
   warn: (message, extra) => push("warn", message, extra),
   error: (message, extra) => push("error", message, extra),
