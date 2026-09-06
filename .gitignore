@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.local
+
+.env
+.env.*
+!.env.example
+iris.db
+secrets.enc
+
+node_modules/
+dist/
+release/
+build/icon.iconset/

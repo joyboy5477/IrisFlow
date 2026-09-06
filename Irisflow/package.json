@@ -1,0 +1,83 @@
+{
+  "name": "irisflow",
+  "version": "0.2.0",
+  "description": "Iris Flow — local Mac speech-to-text overlay",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build:key-listener": "bash scripts/build-key-listener.sh",
+    "build": "npm run build:key-listener && webpack --mode development",
+    "build:prod": "npm run build:key-listener && webpack --mode production",
+    "start": "npm run build && electron .",
+    "watch": "npm run build:key-listener && webpack --watch --mode development",
+    "rebuild": "npm run build:key-listener",
+    "dist:mac": "npm run build:prod && electron-builder --mac --arm64",
+    "install:mac": "npm run build:prod && electron-builder --mac --arm64 --dir && bash scripts/install-mac.sh"
+  },
+  "dependencies": {
+    "mammoth": "^1.9.0",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.13.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/preset-react": "^7.23.3",
+    "babel-loader": "^9.1.3",
+    "css-loader": "^6.10.0",
+    "electron": "^29.4.6",
+    "electron-builder": "^26.0.12",
+    "html-webpack-plugin": "^5.6.3",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
+  },
+  "build": {
+    "appId": "com.irisflow.app",
+    "productName": "Irisflow",
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "bin/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "bin/MacKeyServer",
+      "node_modules/sql.js/dist/*.wasm"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Iris Flow uses the microphone for voice input.",
+        "NSAppleEventsUsageDescription": "Iris Flow sends keystrokes to paste dictation into the app you're using."
+      }
+    },
+    "dmg": {
+      "icon": "build/icon.icns",
+      "iconSize": 80
+    }
+  }
+}

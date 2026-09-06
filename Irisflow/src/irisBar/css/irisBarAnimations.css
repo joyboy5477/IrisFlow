@@ -1,0 +1,74 @@
+@keyframes irisPulseRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.65;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes irisGlyphWave {
+  0%,
+  100% {
+    transform: scaleY(0.52);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes irisOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes irisDotPulse {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@keyframes irisBarShellReveal {
+  0% {
+    clip-path: inset(0 0 0 calc(100% - 12px) round 999px);
+    opacity: 0.92;
+    transform: translateX(2px);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0 0 round 999px);
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes irisListenMorph {
+  0% {
+    opacity: 0.85;
+    transform: translateX(4px) scaleX(0.16) scaleY(0.28);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(0) scaleX(1.04) scaleY(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}

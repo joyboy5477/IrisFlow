@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+*.local
+.idea/
+.vscode/
+iris.db
+secrets.enc
+build/icon.iconset/
+Thumbs.db

@@ -1,0 +1,12 @@
+:root {
+  --iris-gold: #f4a31a;
+  --iris-dark-gold: #d88406;
+  --iris-bg: rgba(82, 47, 4, 0.62);
+  --iris-bg-deep: rgba(42, 25, 3, 0.5);
+  --iris-bg-soft: rgba(244, 163, 26, 0.18);
+  --iris-border: rgba(244, 163, 26, 0.72);
+  --iris-text: #fff8e7;
+  --iris-muted: rgba(255, 248, 231, 0.78);
+  --iris-error: #ff5f57;
+  --iris-shadow: rgba(244, 163, 26, 0.32);
+}
