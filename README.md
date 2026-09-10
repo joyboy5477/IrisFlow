@@ -22,13 +22,7 @@ Then open **Irisflow** from Applications. You do not run npm again after that.
 
 ## Devices
 
-
-| Works                          | Does not work |
-| ------------------------------ | ------------- |
-| macOS 11 or later              | Windows       |
-| Apple Silicon — M1, M2, M3, M4 | Intel Macs    |
-|                                | Linux         |
-
+Works only on **Apple Silicon Macs** — M1, M2, M3, and M4 (macOS 11+). Not for Intel Macs, Windows, or Linux.
 
 You need **Node.js 18+** and **Xcode Command Line Tools** (`xcode-select --install`) to build.
 
