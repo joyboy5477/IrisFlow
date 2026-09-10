@@ -1,4 +1,4 @@
-![Iris Flow](assets/icon.png)
+<img src="assets/icon.png" width="96" alt="Iris Flow" />
 
 # Iris Flow
 
