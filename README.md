@@ -51,7 +51,7 @@ If you can type in it, you can dictate into it.
 - **Documents** — Upload PDFs and notes. With a Google AI key, Iris Flow can search them in AI mode.
 - **Local data** — Chats, files, and keys stay on this Mac. Keys are encrypted with macOS Keychain.
 
-![Iris Flow mark](assets/logo.png)
+<img src="assets/logo.png" width="48" alt="Iris Flow mark" />
 
 ## Install
 
